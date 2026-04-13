@@ -232,6 +232,7 @@ def delete_recipe(recipe_id):
         flash('You can only delete your own recipes.', 'error')
         return redirect(url_for('recipe_detail', recipe_id=recipe.id))
     db.session.execute(favorites.delete().where(favorites.c.recipe_id == recipe_id))
+    db.session.flush()
     db.session.delete(recipe)
     db.session.commit()
     flash('Recipe deleted.', 'info')
@@ -454,6 +455,7 @@ def api_delete_recipe(recipe_id):
     if recipe.user_id != user_id:
         return jsonify({'error': 'Unauthorized'}), 403
     db.session.execute(favorites.delete().where(favorites.c.recipe_id == recipe_id))
+    db.session.flush()
     db.session.delete(recipe)
     db.session.commit()
     return jsonify({'message': 'Recipe deleted'}), 200
