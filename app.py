@@ -398,6 +398,7 @@ def api_get_recipes():
         'notes':        r.notes,
         'author':       r.author.username,
         'user_id':      r.user_id,
+        'created_at': r.created_at.strftime('%b %d, %Y') if r.created_at else '',
     } for r in recipes])
 
 
@@ -419,6 +420,7 @@ def api_get_recipe(recipe_id):
             'notes':        r.notes or '',
             'author':       r.author.username if r.user_id and r.author else 'Unknown',
             'user_id':      r.user_id or 0,
+            'created_at': r.created_at.strftime('%b %d, %Y') if r.created_at else '',
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -512,6 +514,31 @@ def api_user_profile(username):
             'cook_time': r.cook_time,
         } for r in recipes]
     })
+
+@app.route('/api/recipes/<int:recipe_id>', methods=['PUT'])
+@jwt_required()
+def api_update_recipe(recipe_id):
+    try:
+        user_id = int(get_jwt_identity())
+        recipe  = Recipe.query.get_or_404(recipe_id)
+        if recipe.user_id != user_id:
+            return jsonify({'error': 'Unauthorized'}), 403
+        data = request.get_json(force=True)
+        recipe.title        = data.get('title', recipe.title).strip()
+        recipe.description  = data.get('description', recipe.description or '').strip()
+        recipe.ingredients  = data.get('ingredients', recipe.ingredients).strip()
+        recipe.instructions = data.get('instructions', recipe.instructions).strip()
+        recipe.category     = data.get('category', recipe.category)
+        recipe.prep_time    = int(data.get('prep_time') or 0)
+        recipe.cook_time    = int(data.get('cook_time') or 0)
+        recipe.servings     = int(data.get('servings') or 1)
+        recipe.image_url    = data.get('image_url', recipe.image_url or '')
+        recipe.notes        = data.get('notes', recipe.notes or '').strip()
+        recipe.updated_at   = datetime.utcnow()
+        db.session.commit()
+        return jsonify({'message': 'Recipe updated'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 with app.app_context():
