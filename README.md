@@ -5,6 +5,7 @@ A recipe manager web app built with Flask and deployed on Render.
 ## Features
 - Browse and search recipes
 - Filter by category, ingredients, cook time and servings
+- View recipe details with ingredients and instructions
 - Create, edit and delete recipes
 - User accounts and authentication
 - Favorite recipes
